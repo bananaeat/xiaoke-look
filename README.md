@@ -33,6 +33,7 @@ A Claude Code mod with thirteen Claude-chan looks for the desktop app's Code tab
 | `/xiaoke list` | 连别名一起列出 |
 | `/xiaoke auto` | 随时间自动换（见下） |
 | `/xiaoke 左栏 425`、`/xiaoke 右栏 320` | 告诉它左右侧栏有多宽，好把小克的脸摆进空隙；不带数字是开关 |
+| `/xiaoke 会话栏 开`、`/xiaoke 会话栏 关` | 对话右边的会话栏（session rail）开没开；不带字是开关 |
 | `/xiaoke 透明`、`/xiaoke 透明 20` | 消息栏背后的遮罩：全透明，或设成百分比（默认 42%） |
 | `/xiaoke 时区 +0` | 自动模式用的时区，默认跟随系统；`/xiaoke 时区 自动` 改回 |
 | `/xiaoke demo`、`/xiaoke demo 8` | 把 13 套轮播一遍（每套 6 秒或给定秒数），播完回到原来那套；再输一次停止。录屏演示用，不改设置 |
@@ -53,9 +54,9 @@ Switch with `/xiaoke <name>`, list with `/xiaoke` or `/xiaoke list`. The choice 
 
 `/xiaoke auto` follows the time of day and the (northern) season, checking every 10 minutes while a session is open.
 
-**脸摆在空隙里。** 桌面端的侧栏是实心的，消息栏在中间。mod 会按窗口宽度算出消息栏和侧栏之间的空隙，把插画挪过去，让小克的脸落在空隙中间；窗口拉宽拉窄都会跟着变。插画贴哪一侧按画面内容定：手上的动作和道具朝着消息栏，那边隔着遮罩还看得见。mod 看不到侧栏开没开，所以要用 `/xiaoke 左栏` / `/xiaoke 右栏` 告诉它一次宽度（默认左栏 300px 开、右栏关）。
+**脸摆在空隙里。** 桌面端的侧栏是实心的，消息栏在中间。mod 会按窗口宽度算出消息栏和侧栏之间的空隙，把插画挪过去，让小克的脸落在空隙中间；窗口拉宽拉窄都会跟着变。插画贴哪一侧按画面内容定：手上的动作和道具朝着消息栏，那边隔着遮罩还看得见。mod 看不到侧栏开没开，所以要用 `/xiaoke 左栏` / `/xiaoke 右栏` 告诉它一次宽度（默认左栏 300px 开、右栏关）。对话右边那一列会话栏（session rail，显示 PR、任务这些）也一样：开着的话输一次 `/xiaoke 会话栏 开`，小克会给它让出 286px；收起了输 `/xiaoke 会话栏 关`。
 
-The app draws its side panels opaque and does not tell a mod about them, so tell it their widths once with `/xiaoke left <px>` and `/xiaoke right <px>`; the picture then moves so the face sits in the gap beside the conversation, at any window width.
+The app draws its side panels opaque and does not tell a mod about them, so tell it their widths once with `/xiaoke left <px>` and `/xiaoke right <px>`; the picture then moves so the face sits in the gap beside the conversation, at any window width. The same goes for the session rail at the conversation's right edge: `/xiaoke rail on` or `/xiaoke rail off`.
 
 每套主题只有一种模式（插画本身是亮的或暗的），会覆盖应用自己的浅色/深色设置。Each look is made for one mode and sets it.
 

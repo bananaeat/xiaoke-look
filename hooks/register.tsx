@@ -22,6 +22,16 @@ const RIGHT_WORDS = ['右栏', '侧栏', 'panel', 'inset', 'right']
 const LEFT_KEY = 'left'
 const LEFT_WIDTH = 300
 const LEFT_WORDS = ['左栏', 'sidebar', 'left']
+// The session rail, the column the app can show at the conversation's right
+// edge: 17.5rem wide and 6px in from that edge, with the transcript centred in
+// the room left of it. The app does not tell a mod whether it shows either, so
+// the person says, once (the app remembers it too). It takes room on the
+// right as the right panel does, beside it.
+const RAIL_KEY = 'rail'
+const RAIL_WIDTH = 286
+const RAIL_WORDS = ['会话栏', '信息栏', 'rail']
+const ON_WORDS = ['开', '打开', 'on', 'show']
+const OFF_WORDS = ['关', '关闭', '收起', 'off', 'hide']
 // How solid the veil over the picture behind the conversation is, 0 to 1.
 const VEIL_KEY = 'veil'
 const VEIL_WORDS = ['透明', '遮罩', '透明度', 'glass', 'veil']
@@ -38,6 +48,15 @@ async function rightWidth(get: Get): Promise<number> {
 
 async function leftWidth(get: Get): Promise<number> {
   return asNumber(await get(LEFT_KEY)) ?? LEFT_WIDTH
+}
+
+async function railShown(get: Get): Promise<boolean> {
+  return (await get(RAIL_KEY)) === true
+}
+
+// All the room the right side takes: the panel, and the rail beside it.
+async function rightTaken(get: Get): Promise<number> {
+  return (await rightWidth(get)) + ((await railShown(get)) ? RAIL_WIDTH : 0)
 }
 
 async function veilOf(get: Get): Promise<number> {
@@ -78,10 +97,10 @@ const AUTO_RULES = [
   '黄昏 16–19 点放学，夜晚 19–23 点台灯夜读（夏天隔天烟花祭，12 月 20 日到 1 月 6 日圣诞），深夜轮换敲代码和侦探。',
 ].join('')
 
-type Settings = { left: number; right: number; veil: number }
+type Settings = { left: number; right: number; rail: boolean; veil: number }
 
 async function settings(get: Get): Promise<Settings> {
-  return { left: await leftWidth(get), right: await rightWidth(get), veil: await veilOf(get) }
+  return { left: await leftWidth(get), right: await rightWidth(get), rail: await railShown(get), veil: await veilOf(get) }
 }
 
 function settingLines(s: Settings): string[] {
@@ -89,6 +108,7 @@ function settingLines(s: Settings): string[] {
 
   return [
     `左栏 ${px(s.left)}，右栏 ${px(s.right)}：小克的脸会挪到消息栏和侧栏之间的空隙里（/xiaoke 左栏 或 右栏 开关，后面加数字设宽度）`,
+    `会话栏（对话右边那一列）${s.rail ? `开，让出 ${RAIL_WIDTH}px` : '关'}（/xiaoke 会话栏 开 或 关）`,
     `消息栏遮罩 ${Math.round(s.veil * 100)}%（/xiaoke 透明 在全透明和默认之间切换，/xiaoke 透明 20 设成 20%）`,
   ]
 }
@@ -227,6 +247,24 @@ export const register: Register = on => {
     if (word === '' || LIST_WORDS.includes(key)) {
       return { text: listText(current, s, await clockLine(get, now), word !== '') }
     }
+    if (RAIL_WORDS.includes(key)) {
+      const said = amount?.toLowerCase()
+      const shown =
+        said === undefined ? !s.rail : ON_WORDS.includes(said) ? true : OFF_WORDS.includes(said) ? false : undefined
+
+      if (shown === undefined) {
+        return { text: `「${amount}」不是开或关：/xiaoke 会话栏 开、/xiaoke 会话栏 关，不带字是开关。` }
+      }
+      await $.store.set(RAIL_KEY, shown)
+      // As for the widths below: draw the backdrop again with the new layout.
+      $.ui.invalidate('ui.render')
+
+      return {
+        text: shown
+          ? `按会话栏开着来摆小克的脸，给它让出 ${RAIL_WIDTH}px；收起了就输 /xiaoke 会话栏 关。`
+          : '按会话栏收起来摆小克的脸；开着的话输 /xiaoke 会话栏 开。',
+      }
+    }
     if (RIGHT_WORDS.includes(key) || LEFT_WORDS.includes(key)) {
       const isRight = RIGHT_WORDS.includes(key)
       const width = widthFrom(amount, isRight ? s.right : s.left, isRight ? RIGHT_WIDTH : LEFT_WIDTH)
@@ -235,8 +273,9 @@ export const register: Register = on => {
         return { text: width }
       }
       await $.store.set(isRight ? RIGHT_KEY : LEFT_KEY, width)
-      // A set of the same look draws the backdrop again with the new layout.
-      await show($, current.look)
+      // The theme is unchanged, so setting it again draws nothing new: ask the
+      // backdrop to draw again with the new layout.
+      $.ui.invalidate('ui.render')
       const side = isRight ? '右' : '左'
 
       return {
@@ -325,7 +364,7 @@ export const register: Register = on => {
       e.surface === 'desktop'
         ? look.scene.replace(
             MOVER,
-            `<g class="mv" style="transform:${faceShift(look, { left: await leftWidth(get), right: await rightWidth(get) })}">`,
+            `<g class="mv" style="transform:${faceShift(look, { left: await leftWidth(get), right: await rightTaken(get) })}">`,
           )
         : look.scene
 

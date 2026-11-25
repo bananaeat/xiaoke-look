@@ -1,6 +1,6 @@
 {
   "name": "xiaoke-look",
-  "version": "0.3.1",
+  "version": "0.3.3",
   "description": "Thirteen Claude-chan looks for the desktop Code tab, switched with /xiaoke or by time of day: palettes and vector illustrations that fade into blank paper",
   "author": { "name": "bananaeat" },
   "license": "MIT"
